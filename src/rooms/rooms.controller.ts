@@ -1,28 +1,55 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto, UpdateRoomDto } from './dto/room.dto';
+import { ROOM_NOT_FOUND } from './constants/rooms.errors.constants';
 
 @Controller('rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
   @Post()
-  async create(@Body() dto: CreateRoomDto) {
+  create(@Body() dto: CreateRoomDto) {
     return this.roomsService.create(dto);
   }
 
   @Patch(':id')
   async update(@Param('id') id: string, @Body() dto: UpdateRoomDto) {
-    return this.roomsService.update(id, dto);
+    const updatedRoom = await this.roomsService.update(id, dto);
+    if (!updatedRoom) {
+      throw new HttpException(ROOM_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    return updatedRoom;
   }
 
   @Delete(':id')
   async delete(@Param('id') id: string) {
-    return this.roomsService.delete(id);
+    const deletedRoom = await this.roomsService.delete(id);
+    if (!deletedRoom) {
+      throw new HttpException(ROOM_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
   }
 
   @Get(':id')
   async findRoomById(@Param('id') id: string) {
-    return this.roomsService.findRoomById(id);
+    const room = await this.roomsService.findRoomById(id);
+    if (!room) {
+      throw new HttpException(ROOM_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    return room;
+  }
+
+  @Get()
+  findAll() {
+    return this.roomsService.findAll();
   }
 }
