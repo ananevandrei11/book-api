@@ -8,8 +8,11 @@ import { disconnect, Types } from 'mongoose';
 import { CreateScheduleDto } from '../src/schedule/dto/schedule.dto';
 import { CreateRoomDto } from '../src/rooms/dto/room.dto';
 import { SCHEDULE_NOT_FOUND } from '../src/schedule/constants/schedule.errors.constants';
+import { ROOM_NOT_FOUND } from '../src/rooms/constants/rooms.errors.constants';
+import { INVALID_ID } from '../src/pipes/id-validation.pipe';
 
 const scheduleIdFalsy = new Types.ObjectId().toHexString();
+const roomIdFalsy = new Types.ObjectId().toHexString();
 const MockRoom: CreateRoomDto = {
   type: HotelRoomType.Single,
   number: 1,
@@ -21,7 +24,7 @@ describe('AppController (e2e)', () => {
   let scheduleCreatedId: string;
   let roomCreatedId: string;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -75,6 +78,20 @@ describe('AppController (e2e)', () => {
       .expect(400);
   });
 
+  it('/schedule (POST) - create - room not found', async () => {
+    return await request(app.getHttpServer())
+      .post('/schedule')
+      .send({ date: '2025-12-02', roomId: roomIdFalsy })
+      .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND, error: 'Not Found' });
+  });
+
+  it('/schedule (POST) - create - invalid roomId', async () => {
+    return await request(app.getHttpServer())
+      .post('/schedule')
+      .send({ date: '2025-12-02', roomId: '123' })
+      .expect(400, { statusCode: 400, message: INVALID_ID, error: 'Bad Request' });
+  });
+
   it('/schedule/:id (PATCH) - success', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
@@ -94,7 +111,16 @@ describe('AppController (e2e)', () => {
       .send({
         date: '2025-12-03',
       })
-      .expect(404);
+      .expect(404, { statusCode: 404, message: SCHEDULE_NOT_FOUND });
+  });
+
+  it('/schedule/:id (PATCH) - error - room not found', async () => {
+    return await request(app.getHttpServer())
+      .patch('/schedule/' + scheduleCreatedId)
+      .send({
+        roomId: roomIdFalsy,
+      })
+      .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND, error: 'Not Found' });
   });
 
   it('/schedule/:id (PATCH) - error - validation error', async () => {
@@ -119,7 +145,13 @@ describe('AppController (e2e)', () => {
   it('/schedule/:id (GET ONE) - error', async () => {
     return await request(app.getHttpServer())
       .get('/schedule/' + scheduleIdFalsy)
-      .expect(404);
+      .expect(404, { statusCode: 404, message: SCHEDULE_NOT_FOUND });
+  });
+
+  it('/schedule/:id (GET ONE) - error - invalid id', async () => {
+    return await request(app.getHttpServer())
+      .get('/schedule/123')
+      .expect(400, { statusCode: 400, message: INVALID_ID, error: 'Bad Request' });
   });
 
   it('/schedule (GET ALL)', async () => {
@@ -152,6 +184,6 @@ describe('AppController (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
-    disconnect();
+    await disconnect();
   });
 });

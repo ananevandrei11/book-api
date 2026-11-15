@@ -6,6 +6,8 @@ import { AppModule } from './../src/app.module';
 import { HotelRoomType } from '../src/rooms/model/rooms.model';
 import { CreateRoomDto } from '../src/rooms/dto/room.dto';
 import { disconnect, Types } from 'mongoose';
+import { ROOM_NOT_FOUND } from '../src/rooms/constants/rooms.errors.constants';
+import { INVALID_ID } from '../src/pipes/id-validation.pipe';
 
 const MockRoom: CreateRoomDto = {
   type: HotelRoomType.Single,
@@ -18,7 +20,7 @@ describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
   let roomCreatedId: string;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -67,7 +69,13 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (GET ONE) - error', async () => {
     return await request(app.getHttpServer())
       .get('/rooms/' + roomIdFalsy)
-      .expect(404);
+      .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND });
+  });
+
+  it('/rooms/:id (GET ONE) - error - invalid id', async () => {
+    return await request(app.getHttpServer())
+      .get('/rooms/123')
+      .expect(400, { statusCode: 400, message: INVALID_ID, error: 'Bad Request' });
   });
 
   it('/rooms (GET ALL)', async () => {
@@ -99,7 +107,7 @@ describe('AppController (e2e)', () => {
       .send({
         seaView: false,
       })
-      .expect(404);
+      .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND });
   });
 
   it('/rooms/:id (DELETE) - success', async () => {
@@ -111,11 +119,11 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (DELETE) - error', async () => {
     return await request(app.getHttpServer())
       .delete('/rooms/' + roomIdFalsy)
-      .expect(404);
+      .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND });
   });
 
   afterAll(async () => {
     await app.close();
-    disconnect();
+    await disconnect();
   });
 });
