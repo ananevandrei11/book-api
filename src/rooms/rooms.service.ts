@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { RoomsDocument, RoomsModel } from './model/rooms.model';
-import { Model } from 'mongoose';
+import { Error as MongooseError, Model } from 'mongoose';
 import { CreateRoomDto, UpdateRoomDto } from './dto/room.dto';
 
 @Injectable()
@@ -10,12 +10,22 @@ export class RoomsService {
     @InjectModel(RoomsModel.name) private roomModel: Model<RoomsModel>,
   ) {}
 
-  create(dto: CreateRoomDto): Promise<RoomsDocument> {
-    return this.roomModel.create(dto);
+  async create(dto: CreateRoomDto): Promise<RoomsDocument> {
+    try {
+      return await this.roomModel.create(dto);
+    } catch (e) {
+      this.handleWriteError(e);
+      throw e;
+    }
   }
 
-  update(id: string, dto: UpdateRoomDto): Promise<RoomsDocument | null> {
-    return this.roomModel.findByIdAndUpdate(id, dto, { returnDocument: 'after', runValidators: true }).exec();
+  async update(id: string, dto: UpdateRoomDto): Promise<RoomsDocument | null> {
+    try {
+      return await this.roomModel.findByIdAndUpdate(id, dto, { returnDocument: 'after', runValidators: true }).exec();
+    } catch (e) {
+      this.handleWriteError(e);
+      throw e;
+    }
   }
 
   delete(id: string): Promise<RoomsDocument | null> {
@@ -28,5 +38,15 @@ export class RoomsService {
 
   findAll(): Promise<RoomsDocument[]> {
     return this.roomModel.find().exec();
+  }
+
+  private handleWriteError(e: unknown): void {
+    if (e instanceof MongooseError.ValidationError) {
+      throw new BadRequestException({
+        statusCode: 400,
+        message: e.message,
+        error: 'Validation',
+      });
+    }
   }
 }

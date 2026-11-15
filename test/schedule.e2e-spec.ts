@@ -74,7 +74,7 @@ describe('AppController (e2e)', () => {
       .expect(400);
   });
 
-  it('/schedule/:id (PATCH)', async () => {
+  it('/schedule/:id (PATCH) - success', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
       .send({
@@ -85,6 +85,24 @@ describe('AppController (e2e)', () => {
         const schedule = res.body;
         expect(schedule.date).toBe('2025-12-03');
       });
+  });
+
+  it('/schedule/:id (PATCH) - error - not found', async () => {
+    return await request(app.getHttpServer())
+      .patch('/schedule/' + scheduleIdFalsy)
+      .send({
+        date: '2025-12-03',
+      })
+      .expect(404);
+  });
+
+  it('/schedule/:id (PATCH) - error - validation error', async () => {
+    return await request(app.getHttpServer())
+      .patch('/schedule/' + scheduleCreatedId)
+      .send({
+        date: '2024-02-31',
+      })
+      .expect(400);
   });
 
   it('/schedule/:id (GET ONE) - success', async () => {
@@ -121,7 +139,7 @@ describe('AppController (e2e)', () => {
 
   it('/schedule/:id (DELETE) - error', async () => {
     return await request(app.getHttpServer())
-      .delete('/rooschedulems/' + scheduleIdFalsy)
+      .delete('/scheduls/' + scheduleIdFalsy)
       .expect(404);
   });
 

@@ -34,13 +34,23 @@ describe('AppController (e2e)', () => {
       .expect('Hello World!');
   });
 
-  it('/rooms/create (POST)', async () => {
+  it('/rooms/create (POST) - success', async () => {
     return await request(app.getHttpServer())
       .post('/rooms/create')
       .send(MockRoom)
       .expect(201)
       .then((res) => {
         roomCreatedId = res.body._id;
+      });
+  });
+
+  it('/rooms/create (POST) - error validation', async () => {
+    return await request(app.getHttpServer())
+      .post('/rooms/create')
+      .send({ ...MockRoom, type: 'VIP' })
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({ statusCode: 400, error: 'Validation' });
       });
   });
 
@@ -70,7 +80,7 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/rooms/:id (PATCH)', async () => {
+  it('/rooms/:id (PATCH) - success', async () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomCreatedId)
       .send({
@@ -81,6 +91,15 @@ describe('AppController (e2e)', () => {
         const room = res.body;
         expect(room.seaView).toBeFalsy();
       });
+  });
+
+  it('/rooms/:id (PATCH) - error', async () => {
+    return await request(app.getHttpServer())
+      .patch('/rooms/' + roomIdFalsy)
+      .send({
+        seaView: false,
+      })
+      .expect(404);
   });
 
   it('/rooms/:id (DELETE) - success', async () => {
