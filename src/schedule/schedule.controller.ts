@@ -24,7 +24,10 @@ export class ScheduleController {
   }
 
   @Patch(':id')
-  async update(@Param('id', IdValidationPipe) id: string, @Body() dto: UpdateScheduleDto) {
+  async update(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: UpdateScheduleDto,
+  ) {
     const updatedSchedule = await this.scheduleService.update(id, dto);
     if (!updatedSchedule) {
       throw new HttpException(SCHEDULE_NOT_FOUND, HttpStatus.NOT_FOUND);

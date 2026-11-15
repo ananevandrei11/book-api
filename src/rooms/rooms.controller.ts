@@ -18,7 +18,7 @@ import { IdValidationPipe } from '../pipes/id-validation.pipe';
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
-  @Post()
+  @Post('/create')
   create(@Body() dto: CreateRoomDto) {
     return this.roomsService.create(dto);
   }
