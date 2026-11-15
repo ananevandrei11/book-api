@@ -60,7 +60,7 @@ describe('AppController (e2e)', () => {
       .expect(404);
   });
 
-  it('/rooms/:id (GET ALL)', async () => {
+  it('/rooms (GET ALL)', async () => {
     return await request(app.getHttpServer())
       .get('/rooms')
       .expect(200)
@@ -74,7 +74,7 @@ describe('AppController (e2e)', () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomCreatedId)
       .send({
-        seaView: false
+        seaView: false,
       })
       .expect(200)
       .then((res) => {
@@ -95,7 +95,8 @@ describe('AppController (e2e)', () => {
       .expect(404);
   });
 
-  afterAll(() => {
+  afterAll(async () => {
+    await app.close();
     disconnect();
   });
 });

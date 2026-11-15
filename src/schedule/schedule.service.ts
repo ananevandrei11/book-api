@@ -31,13 +31,19 @@ export class ScheduleService {
     }
   }
 
-  async update(id: string, dto: UpdateScheduleDto): Promise<ScheduleDocument | null> {
+  async update(
+    id: string,
+    dto: UpdateScheduleDto,
+  ): Promise<ScheduleDocument | null> {
     if (dto.roomId !== undefined) {
       await this.checkRoomExists(dto.roomId);
     }
     try {
       return await this.scheduleModel
-        .findByIdAndUpdate(id, dto, { returnDocument: 'after', runValidators: true })
+        .findByIdAndUpdate(id, dto, {
+          returnDocument: 'after',
+          runValidators: true,
+        })
         .exec();
     } catch (e) {
       this.handleWriteError(e);
@@ -69,10 +75,17 @@ export class ScheduleService {
 
   private handleWriteError(e: unknown): void {
     if (e instanceof mongo.MongoServerError && e.code === 11000) {
-      throw new ConflictException(SCHEDULE_ROOM_ALREADY_BOOKED);
+      throw new ConflictException(SCHEDULE_ROOM_ALREADY_BOOKED, {
+        cause: e,
+        description: 'Schedule conflict',
+      });
     }
     if (e instanceof MongooseError.ValidationError) {
-      throw new BadRequestException(e.message);
+      throw new BadRequestException({
+        statusCode: 400,
+        message: e.message,
+        error: 'Validation',
+      });
     }
   }
 }
