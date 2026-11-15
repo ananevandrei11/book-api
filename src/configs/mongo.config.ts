@@ -6,7 +6,7 @@ const getMongoOptions = (configService: ConfigService) => {
   const host = configService.get('MONGODB_HOST');
   const port = configService.get('MONGODB_PORT');
   const authDB = configService.get('MONGODB_AUTH');
-  return `mongodb://${login}:${pass}@${host}:${port}/top-api?authSource=${authDB}&directConnection=true`;
+  return `mongodb://${login}:${pass}@${host}:${port}/book-api?authSource=${authDB}&directConnection=true`;
 };
 
 export const getMongoConfig = async (configService: ConfigService) => ({
