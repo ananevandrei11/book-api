@@ -7,6 +7,7 @@ import { HotelRoomType } from '../src/rooms/model/rooms.model';
 import { disconnect, Types } from 'mongoose';
 import { CreateScheduleDto } from '../src/schedule/dto/schedule.dto';
 import { CreateRoomDto } from '../src/rooms/dto/room.dto';
+import { SCHEDULE_NOT_FOUND } from '../src/schedule/constants/schedule.errors.constants';
 
 const scheduleIdFalsy = new Types.ObjectId().toHexString();
 const MockRoom: CreateRoomDto = {
@@ -139,8 +140,8 @@ describe('AppController (e2e)', () => {
 
   it('/schedule/:id (DELETE) - error', async () => {
     return await request(app.getHttpServer())
-      .delete('/scheduls/' + scheduleIdFalsy)
-      .expect(404);
+      .delete('/schedule/' + scheduleIdFalsy)
+      .expect(404, { statusCode: 404, message: SCHEDULE_NOT_FOUND });
   });
 
   it('/rooms/:id (DELETE) - success', async () => {
