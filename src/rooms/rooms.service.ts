@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { RoomsDocument, RoomsModel } from './model/rooms.model';
-import { DeleteResult, Model, UpdateWriteOpResult } from 'mongoose';
+import { Model } from 'mongoose';
 import { CreateRoomDto, UpdateRoomDto } from './dto/room.dto';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class RoomsService {
   }
 
   update(id: string, dto: UpdateRoomDto): Promise<RoomsDocument | null> {
-    return this.roomModel.findByIdAndUpdate(id, dto, { returnDocument: 'after' }).exec();
+    return this.roomModel.findByIdAndUpdate(id, dto, { returnDocument: 'after', runValidators: true }).exec();
   }
 
   delete(id: string): Promise<RoomsDocument | null> {

@@ -12,6 +12,7 @@ import {
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto, UpdateRoomDto } from './dto/room.dto';
 import { ROOM_NOT_FOUND } from './constants/rooms.errors.constants';
+import { IdValidationPipe } from '../pipes/id-validation.pipe';
 
 @Controller('rooms')
 export class RoomsController {
@@ -23,7 +24,7 @@ export class RoomsController {
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() dto: UpdateRoomDto) {
+  async update(@Param('id', IdValidationPipe) id: string, @Body() dto: UpdateRoomDto) {
     const updatedRoom = await this.roomsService.update(id, dto);
     if (!updatedRoom) {
       throw new HttpException(ROOM_NOT_FOUND, HttpStatus.NOT_FOUND);
@@ -32,7 +33,7 @@ export class RoomsController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
+  async delete(@Param('id', IdValidationPipe) id: string) {
     const deletedRoom = await this.roomsService.delete(id);
     if (!deletedRoom) {
       throw new HttpException(ROOM_NOT_FOUND, HttpStatus.NOT_FOUND);
@@ -40,7 +41,7 @@ export class RoomsController {
   }
 
   @Get(':id')
-  async findRoomById(@Param('id') id: string) {
+  async findRoomById(@Param('id', IdValidationPipe) id: string) {
     const room = await this.roomsService.findRoomById(id);
     if (!room) {
       throw new HttpException(ROOM_NOT_FOUND, HttpStatus.NOT_FOUND);

@@ -4,13 +4,18 @@ import { RoomsModel } from '../../rooms/model/rooms.model';
 
 export type ScheduleDocument = HydratedDocument<ScheduleModel>;
 
+// 'YYYY-MM-DD' and a real calendar date (rejects 2024-02-31, 2024-13-45)
+const isValidDate = (value: string): boolean =>
+  /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+  !isNaN(Date.parse(value)) &&
+  new Date(value).toISOString().startsWith(value);
+
 @Schema({ timestamps: true })
 export class ScheduleModel {
   @Prop({ type: MSchema.Types.ObjectId, ref: RoomsModel.name, required: true })
   roomId: Types.ObjectId;
 
-  // 'YYYY-MM-DD'
-  @Prop({ required: true, match: /^\d{4}-\d{2}-\d{2}$/ })
+  @Prop({ required: true, validate: isValidDate })
   date: string;
 }
 
