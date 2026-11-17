@@ -44,7 +44,7 @@ export class RoomsService {
     if (e instanceof MongooseError.ValidationError) {
       throw new BadRequestException({
         statusCode: 400,
-        message: e.message,
+        message: Object.values(e.errors).map((err) => err.message),
         error: 'Validation',
       });
     }
