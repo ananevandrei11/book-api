@@ -37,7 +37,6 @@ export class RoomsController {
   @UsePipes(
     new ValidationPipe({
       transform: true,
-      skipMissingProperties: true,
       exceptionFactory: validationExceptionFactory,
     }),
   )

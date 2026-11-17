@@ -67,11 +67,15 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/schedule (POST) - create - custon validation error - date', async () => {
+  it('/schedule (POST) - create - pipe validation error - not a real date', async () => {
     return await request(app.getHttpServer())
       .post('/schedule')
       .send({ date: '2024-02-31', roomId: roomCreatedId })
-      .expect(400);
+      .expect(400, {
+        statusCode: 400,
+        message: [SCHEDULE_DTO_VALIDATION.realDate],
+        error: 'Validation',
+      });
   });
 
   it('/schedule (POST) - create - pipe validation error - date', async () => {
@@ -82,9 +86,31 @@ describe('AppController (e2e)', () => {
       .then((res) => {
         expect(res.body).toMatchObject({
           statusCode: 400,
-          message: [SCHEDULE_DTO_VALIDATION.date],
           error: 'Validation',
         });
+        expect(res.body.message).toEqual(
+          expect.arrayContaining([SCHEDULE_DTO_VALIDATION.date]),
+        );
+      });
+  });
+
+  it('/schedule (POST) - create - pipe validation error - empty body', async () => {
+    return await request(app.getHttpServer())
+      .post('/schedule')
+      .send({})
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          error: 'Validation',
+        });
+        expect(res.body.message).toEqual(
+          expect.arrayContaining([
+            'roomId must be a mongodb id',
+            SCHEDULE_DTO_VALIDATION.date,
+            SCHEDULE_DTO_VALIDATION.realDate,
+          ]),
+        );
       });
   });
 
@@ -162,13 +188,17 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/schedule/:id (PATCH) - error - custom validation error - date', async () => {
+  it('/schedule/:id (PATCH) - error - pipe validation error - not a real date', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
       .send({
         date: '2024-02-31',
       })
-      .expect(400);
+      .expect(400, {
+        statusCode: 400,
+        message: [SCHEDULE_DTO_VALIDATION.realDate],
+        error: 'Validation',
+      });
   });
 
   it('/schedule/:id (PATCH) - error - pipe validation error - date', async () => {
@@ -179,9 +209,11 @@ describe('AppController (e2e)', () => {
       .then((res) => {
         expect(res.body).toMatchObject({
           statusCode: 400,
-          message: [SCHEDULE_DTO_VALIDATION.date],
           error: 'Validation',
         });
+        expect(res.body.message).toEqual(
+          expect.arrayContaining([SCHEDULE_DTO_VALIDATION.date]),
+        );
       });
   });
 

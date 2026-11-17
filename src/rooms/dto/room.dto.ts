@@ -1,4 +1,5 @@
-import { IsBoolean, IsEnum, IsNumber, Min } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { IsBoolean, IsEnum, IsInt, Min } from 'class-validator';
 import { HotelRoomType } from '../model/rooms.model';
 import { ROOM_DTO_VALIDATION } from '../constants/rooms.errors.constants';
 
@@ -6,22 +7,14 @@ export class CreateRoomDto {
   @IsEnum(HotelRoomType, { message: ROOM_DTO_VALIDATION.type })
   type: HotelRoomType;
 
-  @IsNumber()
+  @IsInt({ message: ROOM_DTO_VALIDATION.intNumber })
   @Min(1, { message: ROOM_DTO_VALIDATION.minNumber })
   number: number;
 
-  @IsBoolean()
+  @IsBoolean({ message: ROOM_DTO_VALIDATION.seaView })
   seaView: boolean;
 }
 
-export class UpdateRoomDto {
-  @IsEnum(HotelRoomType, { message: ROOM_DTO_VALIDATION.type })
-  type?: HotelRoomType;
-
-  @IsNumber()
-  @Min(1, { message: ROOM_DTO_VALIDATION.minNumber })
-  number?: number;
-
-  @IsBoolean()
-  seaView?: boolean;
-}
+export class UpdateRoomDto extends PartialType(CreateRoomDto, {
+  skipNullProperties: false,
+}) {}

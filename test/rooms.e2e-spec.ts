@@ -72,6 +72,7 @@ describe('AppController (e2e)', () => {
         expect(res.body).toMatchObject({
           statusCode: 400,
           error: 'Validation',
+          message: [ROOM_DTO_VALIDATION.seaView],
         });
       });
   });
@@ -87,6 +88,38 @@ describe('AppController (e2e)', () => {
           error: 'Validation',
           message: [ROOM_DTO_VALIDATION.minNumber],
         });
+      });
+  });
+
+  it('/rooms/create (POST) - error validation number is not integer', async () => {
+    return await request(app.getHttpServer())
+      .post('/rooms/create')
+      .send({ ...MockRoom, number: 1.5 })
+      .expect(400, {
+        statusCode: 400,
+        message: [ROOM_DTO_VALIDATION.intNumber],
+        error: 'Validation',
+      });
+  });
+
+  it('/rooms/create (POST) - error validation empty body', async () => {
+    return await request(app.getHttpServer())
+      .post('/rooms/create')
+      .send({})
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          error: 'Validation',
+        });
+        expect(res.body.message).toEqual(
+          expect.arrayContaining([
+            ROOM_DTO_VALIDATION.type,
+            ROOM_DTO_VALIDATION.intNumber,
+            ROOM_DTO_VALIDATION.minNumber,
+            ROOM_DTO_VALIDATION.seaView,
+          ]),
+        );
       });
   });
 
@@ -178,12 +211,23 @@ describe('AppController (e2e)', () => {
       .send({
         seaView: 0,
       })
-      .expect(400)
-      .then((res) => {
-        expect(res.body).toMatchObject({
-          statusCode: 400,
-          error: 'Validation',
-        });
+      .expect(400, {
+        statusCode: 400,
+        message: [ROOM_DTO_VALIDATION.seaView],
+        error: 'Validation',
+      });
+  });
+
+  it('/rooms/:id (PATCH) - error validation type is null', async () => {
+    return await request(app.getHttpServer())
+      .patch('/rooms/' + roomCreatedId)
+      .send({
+        type: null,
+      })
+      .expect(400, {
+        statusCode: 400,
+        message: [ROOM_DTO_VALIDATION.type],
+        error: 'Validation',
       });
   });
 
