@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -8,23 +9,42 @@ import {
   Param,
   Patch,
   Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { RoomsService } from './rooms.service';
 import { CreateRoomDto, UpdateRoomDto } from './dto/room.dto';
 import { ROOM_NOT_FOUND } from './constants/rooms.errors.constants';
 import { IdValidationPipe } from '../pipes/id-validation.pipe';
+import { ValidationError } from 'class-validator';
+import { validationExceptionFactory } from '../pipes/validation-exception.factory';
 
 @Controller('rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
 
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      exceptionFactory: validationExceptionFactory,
+    }),
+  )
   @Post('/create')
   create(@Body() dto: CreateRoomDto) {
     return this.roomsService.create(dto);
   }
 
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      exceptionFactory: validationExceptionFactory,
+    }),
+  )
   @Patch(':id')
-  async update(@Param('id', IdValidationPipe) id: string, @Body() dto: UpdateRoomDto) {
+  async update(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: UpdateRoomDto,
+  ) {
     const updatedRoom = await this.roomsService.update(id, dto);
     if (!updatedRoom) {
       throw new HttpException(ROOM_NOT_FOUND, HttpStatus.NOT_FOUND);

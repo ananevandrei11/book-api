@@ -6,7 +6,10 @@ import { AppModule } from './../src/app.module';
 import { HotelRoomType } from '../src/rooms/model/rooms.model';
 import { CreateRoomDto } from '../src/rooms/dto/room.dto';
 import { disconnect, Types } from 'mongoose';
-import { ROOM_NOT_FOUND } from '../src/rooms/constants/rooms.errors.constants';
+import {
+  ROOM_DTO_VALIDATION,
+  ROOM_NOT_FOUND,
+} from '../src/rooms/constants/rooms.errors.constants';
 import { INVALID_ID } from '../src/pipes/id-validation.pipe';
 
 const MockRoom: CreateRoomDto = {
@@ -46,13 +49,77 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/rooms/create (POST) - error validation', async () => {
+  it('/rooms/create (POST) - error validation type', async () => {
     return await request(app.getHttpServer())
       .post('/rooms/create')
       .send({ ...MockRoom, type: 'VIP' })
       .expect(400)
       .then((res) => {
-        expect(res.body).toMatchObject({ statusCode: 400, error: 'Validation' });
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          error: 'Validation',
+          message: [ROOM_DTO_VALIDATION.type],
+        });
+      });
+  });
+
+  it('/rooms/create (POST) - error validation sea view', async () => {
+    return await request(app.getHttpServer())
+      .post('/rooms/create')
+      .send({ ...MockRoom, seaView: 'YES' })
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          error: 'Validation',
+          message: [ROOM_DTO_VALIDATION.seaView],
+        });
+      });
+  });
+
+  it('/rooms/create (POST) - error validation numer of room', async () => {
+    return await request(app.getHttpServer())
+      .post('/rooms/create')
+      .send({ ...MockRoom, number: 0 })
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          error: 'Validation',
+          message: [ROOM_DTO_VALIDATION.minNumber],
+        });
+      });
+  });
+
+  it('/rooms/create (POST) - error validation number is not integer', async () => {
+    return await request(app.getHttpServer())
+      .post('/rooms/create')
+      .send({ ...MockRoom, number: 1.5 })
+      .expect(400, {
+        statusCode: 400,
+        message: [ROOM_DTO_VALIDATION.intNumber],
+        error: 'Validation',
+      });
+  });
+
+  it('/rooms/create (POST) - error validation empty body', async () => {
+    return await request(app.getHttpServer())
+      .post('/rooms/create')
+      .send({})
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          error: 'Validation',
+        });
+        expect(res.body.message).toEqual(
+          expect.arrayContaining([
+            ROOM_DTO_VALIDATION.type,
+            ROOM_DTO_VALIDATION.intNumber,
+            ROOM_DTO_VALIDATION.minNumber,
+            ROOM_DTO_VALIDATION.seaView,
+          ]),
+        );
       });
   });
 
@@ -73,9 +140,11 @@ describe('AppController (e2e)', () => {
   });
 
   it('/rooms/:id (GET ONE) - error - invalid id', async () => {
-    return await request(app.getHttpServer())
-      .get('/rooms/123')
-      .expect(400, { statusCode: 400, message: INVALID_ID, error: 'Bad Request' });
+    return await request(app.getHttpServer()).get('/rooms/123').expect(400, {
+      statusCode: 400,
+      message: INVALID_ID,
+      error: 'Bad Request',
+    });
   });
 
   it('/rooms (GET ALL)', async () => {
@@ -101,13 +170,65 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/rooms/:id (PATCH) - error', async () => {
+  it('/rooms/:id (PATCH) - error - id is not found', async () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomIdFalsy)
       .send({
         seaView: false,
       })
       .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND });
+  });
+
+  it('/rooms/:id (PATCH) - error validation type', async () => {
+    return await request(app.getHttpServer())
+      .patch('/rooms/' + roomIdFalsy)
+      .send({
+        type: 'VIP',
+      })
+      .expect(400, {
+        statusCode: 400,
+        message: [ROOM_DTO_VALIDATION.type],
+        error: 'Validation',
+      });
+  });
+
+  it('/rooms/:id (PATCH) - error validation number of room', async () => {
+    return await request(app.getHttpServer())
+      .patch('/rooms/' + roomIdFalsy)
+      .send({
+        number: 0,
+      })
+      .expect(400, {
+        statusCode: 400,
+        message: [ROOM_DTO_VALIDATION.minNumber],
+        error: 'Validation',
+      });
+  });
+
+  it('/rooms/:id (PATCH) - error validation sea view', async () => {
+    return await request(app.getHttpServer())
+      .patch('/rooms/' + roomIdFalsy)
+      .send({
+        seaView: 0,
+      })
+      .expect(400, {
+        statusCode: 400,
+        message: [ROOM_DTO_VALIDATION.seaView],
+        error: 'Validation',
+      });
+  });
+
+  it('/rooms/:id (PATCH) - error validation type is null', async () => {
+    return await request(app.getHttpServer())
+      .patch('/rooms/' + roomCreatedId)
+      .send({
+        type: null,
+      })
+      .expect(400, {
+        statusCode: 400,
+        message: [ROOM_DTO_VALIDATION.type],
+        error: 'Validation',
+      });
   });
 
   it('/rooms/:id (DELETE) - success', async () => {
