@@ -8,21 +8,37 @@ import {
   Param,
   Patch,
   Post,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ScheduleService } from './schedule.service';
 import { CreateScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
 import { SCHEDULE_NOT_FOUND } from './constants/schedule.errors.constants';
 import { IdValidationPipe } from '../pipes/id-validation.pipe';
+import { validationExceptionFactory } from '../pipes/validation-exception.factory';
 
 @Controller('schedule')
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      exceptionFactory: validationExceptionFactory,
+    }),
+  )
   @Post()
   create(@Body() dto: CreateScheduleDto) {
     return this.scheduleService.create(dto);
   }
 
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      skipMissingProperties: true,
+      exceptionFactory: validationExceptionFactory,
+    }),
+  )
   @Patch(':id')
   async update(
     @Param('id', IdValidationPipe) id: string,

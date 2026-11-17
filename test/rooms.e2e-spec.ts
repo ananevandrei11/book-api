@@ -180,7 +180,6 @@ describe('AppController (e2e)', () => {
       })
       .expect(400)
       .then((res) => {
-        console.log(JSON.stringify(res.body, null, 2))
         expect(res.body).toMatchObject({
           statusCode: 400,
           error: 'Validation',

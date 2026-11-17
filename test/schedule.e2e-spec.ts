@@ -7,7 +7,10 @@ import { HotelRoomType } from '../src/rooms/model/rooms.model';
 import { disconnect, Types } from 'mongoose';
 import { CreateScheduleDto } from '../src/schedule/dto/schedule.dto';
 import { CreateRoomDto } from '../src/rooms/dto/room.dto';
-import { SCHEDULE_NOT_FOUND } from '../src/schedule/constants/schedule.errors.constants';
+import {
+  SCHEDULE_DTO_VALIDATION,
+  SCHEDULE_NOT_FOUND,
+} from '../src/schedule/constants/schedule.errors.constants';
 import { ROOM_NOT_FOUND } from '../src/rooms/constants/rooms.errors.constants';
 import { INVALID_ID } from '../src/pipes/id-validation.pipe';
 
@@ -31,13 +34,6 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-  });
-
-  it('/ (GET)', () => {
-    return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
   });
 
   it('/rooms/create (POST)', async () => {
@@ -71,25 +67,49 @@ describe('AppController (e2e)', () => {
       });
   });
 
-  it('/schedule (POST) - create - validation error', async () => {
+  it('/schedule (POST) - create - custon validation error - date', async () => {
     return await request(app.getHttpServer())
       .post('/schedule')
       .send({ date: '2024-02-31', roomId: roomCreatedId })
       .expect(400);
   });
 
+  it('/schedule (POST) - create - pipe validation error - date', async () => {
+    return await request(app.getHttpServer())
+      .post('/schedule')
+      .send({ date: '2026, November 19', roomId: roomCreatedId })
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          message: [SCHEDULE_DTO_VALIDATION.date],
+          error: 'Validation',
+        });
+      });
+  });
+
   it('/schedule (POST) - create - room not found', async () => {
     return await request(app.getHttpServer())
       .post('/schedule')
       .send({ date: '2025-12-02', roomId: roomIdFalsy })
-      .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND, error: 'Not Found' });
+      .expect(404, {
+        statusCode: 404,
+        message: ROOM_NOT_FOUND,
+        error: 'Not Found',
+      });
   });
 
-  it('/schedule (POST) - create - invalid roomId', async () => {
+  it('/schedule (POST) - create - pipe validation error roomId', async () => {
     return await request(app.getHttpServer())
       .post('/schedule')
       .send({ date: '2025-12-02', roomId: '123' })
-      .expect(400, { statusCode: 400, message: INVALID_ID, error: 'Bad Request' });
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          error: 'Validation',
+        });
+      });
   });
 
   it('/schedule/:id (PATCH) - success', async () => {
@@ -120,16 +140,49 @@ describe('AppController (e2e)', () => {
       .send({
         roomId: roomIdFalsy,
       })
-      .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND, error: 'Not Found' });
+      .expect(404, {
+        statusCode: 404,
+        message: ROOM_NOT_FOUND,
+        error: 'Not Found',
+      });
   });
 
-  it('/schedule/:id (PATCH) - error - validation error', async () => {
+  it('/schedule/:id (PATCH) - error - pipe validation - roomId', async () => {
+    return await request(app.getHttpServer())
+      .patch('/schedule/' + scheduleCreatedId)
+      .send({
+        roomId: 123,
+      })
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          error: 'Validation',
+        });
+      });
+  });
+
+  it('/schedule/:id (PATCH) - error - custom validation error - date', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
       .send({
         date: '2024-02-31',
       })
       .expect(400);
+  });
+
+  it('/schedule/:id (PATCH) - error - pipe validation error - date', async () => {
+    return await request(app.getHttpServer())
+      .patch('/schedule/' + scheduleCreatedId)
+      .send({ date: '2026, November 19' })
+      .expect(400)
+      .then((res) => {
+        expect(res.body).toMatchObject({
+          statusCode: 400,
+          message: [SCHEDULE_DTO_VALIDATION.date],
+          error: 'Validation',
+        });
+      });
   });
 
   it('/schedule/:id (GET ONE) - success', async () => {
@@ -149,9 +202,11 @@ describe('AppController (e2e)', () => {
   });
 
   it('/schedule/:id (GET ONE) - error - invalid id', async () => {
-    return await request(app.getHttpServer())
-      .get('/schedule/123')
-      .expect(400, { statusCode: 400, message: INVALID_ID, error: 'Bad Request' });
+    return await request(app.getHttpServer()).get('/schedule/123').expect(400, {
+      statusCode: 400,
+      message: INVALID_ID,
+      error: 'Bad Request',
+    });
   });
 
   it('/schedule (GET ALL)', async () => {
@@ -177,10 +232,10 @@ describe('AppController (e2e)', () => {
   });
 
   it('/rooms/:id (DELETE) - success', async () => {
-      return await request(app.getHttpServer())
-        .delete('/rooms/' + roomCreatedId)
-        .expect(200);
-    });
+    return await request(app.getHttpServer())
+      .delete('/rooms/' + roomCreatedId)
+      .expect(200);
+  });
 
   afterAll(async () => {
     await app.close();
