@@ -21,6 +21,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../decorators/roles.decorator';
 import { UserRoleType } from '../users/model/users.model';
+import { User } from '../decorators/user.decorator';
+import { UsersPayloadDto } from '../users/dto/users.dto';
 
 @Controller('schedule')
 export class ScheduleController {
@@ -35,8 +37,8 @@ export class ScheduleController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles([UserRoleType.User])
   @Post()
-  create(@Body() dto: CreateScheduleDto) {
-    return this.scheduleService.create(dto);
+  create(@Body() dto: CreateScheduleDto, @User() user: UsersPayloadDto) {
+    return this.scheduleService.create(dto, user.id);
   }
 
   @UsePipes(
@@ -45,12 +47,15 @@ export class ScheduleController {
       exceptionFactory: validationExceptionFactory,
     }),
   )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles([UserRoleType.User])
   @Patch(':id')
   async update(
     @Param('id', IdValidationPipe) id: string,
     @Body() dto: UpdateScheduleDto,
+    @User() user: UsersPayloadDto,
   ) {
-    const updatedSchedule = await this.scheduleService.update(id, dto);
+    const updatedSchedule = await this.scheduleService.update(id, dto, user.id);
     if (!updatedSchedule) {
       throw new HttpException(SCHEDULE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
@@ -60,8 +65,11 @@ export class ScheduleController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles([UserRoleType.User])
   @Delete(':id')
-  async delete(@Param('id', IdValidationPipe) id: string) {
-    const deletedSchedule = await this.scheduleService.delete(id);
+  async delete(
+    @Param('id', IdValidationPipe) id: string,
+    @User() user: UsersPayloadDto,
+  ) {
+    const deletedSchedule = await this.scheduleService.delete(id, user.id);
     if (!deletedSchedule) {
       throw new HttpException(SCHEDULE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }

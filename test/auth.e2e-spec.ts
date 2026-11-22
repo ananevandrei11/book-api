@@ -18,7 +18,6 @@ const MockUser: UserRegisterDto = {
   firstName: 'Auth',
   lastName: 'Test',
   phone: '1234567890',
-  role: UserRoleType.User,
 };
 
 describe('AuthController (e2e)', () => {
@@ -35,15 +34,16 @@ describe('AuthController (e2e)', () => {
     await app.init();
   });
 
-  it('/auth/register (POST) - success', async () => {
+  it('/auth/register (POST) - success - role from body is ignored', async () => {
     return await request(app.getHttpServer())
       .post('/auth/register')
-      .send(MockUser)
+      .send({ ...MockUser, role: UserRoleType.Admin })
       .expect(200)
       .then((res) => {
         userId = res.body._id;
         expect(res.body.email).toBe(MockUser.email);
-        expect(res.body.role).toBe(MockUser.role);
+        expect(res.body.role).toBe(UserRoleType.User);
+        expect(res.body.passwordHash).toBeUndefined();
       });
   });
 
@@ -68,19 +68,6 @@ describe('AuthController (e2e)', () => {
           statusCode: 400,
           error: 'Bad Request',
           message: ['email must be an email'],
-        });
-      });
-  });
-
-  it('/auth/register (POST) - error validation role', async () => {
-    return await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({ ...MockUser, role: 'superadmin' })
-      .expect(400)
-      .then((res) => {
-        expect(res.body).toMatchObject({
-          statusCode: 400,
-          error: 'Bad Request',
         });
       });
   });

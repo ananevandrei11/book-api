@@ -5,7 +5,6 @@ import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
 import { disconnect } from 'mongoose';
 import { UserRegisterDto } from '../src/users/dto/users.dto';
-import { UserRoleType } from '../src/users/model/users.model';
 import { USER_WRONG_PASSWORD } from '../src/users/constants/users.errors.constants';
 
 const MockUser: UserRegisterDto = {
@@ -14,7 +13,6 @@ const MockUser: UserRegisterDto = {
   firstName: 'Users',
   lastName: 'Test',
   phone: '1234567890',
-  role: UserRoleType.User,
 };
 
 describe('UsersController (e2e)', () => {

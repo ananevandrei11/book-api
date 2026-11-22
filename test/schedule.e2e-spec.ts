@@ -14,7 +14,9 @@ import {
 import { ROOM_NOT_FOUND } from '../src/rooms/constants/rooms.errors.constants';
 import { INVALID_ID } from '../src/pipes/id-validation.pipe';
 import { UserRegisterDto } from '../src/users/dto/users.dto';
-import { UserRoleType } from '../src/users/model/users.model';
+import { UserRoleType, UsersModel } from '../src/users/model/users.model';
+import { getModelToken } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 const scheduleIdFalsy = new Types.ObjectId().toHexString();
 const roomIdFalsy = new Types.ObjectId().toHexString();
@@ -29,7 +31,13 @@ const MockAdmin: UserRegisterDto = {
   firstName: 'Admin',
   lastName: 'Test',
   phone: '1234567890',
-  role: UserRoleType.Admin,
+};
+const MockOther: UserRegisterDto = {
+  email: `other-${Date.now()}@test.com`,
+  password: 'password',
+  firstName: 'Other',
+  lastName: 'Test',
+  phone: '1234567890',
 };
 const MockUser: UserRegisterDto = {
   email: `user-${Date.now()}@test.com`,
@@ -37,7 +45,6 @@ const MockUser: UserRegisterDto = {
   firstName: 'User',
   lastName: 'Test',
   phone: '1234567890',
-  role: UserRoleType.User,
 };
 
 describe('AppController (e2e)', () => {
@@ -46,6 +53,8 @@ describe('AppController (e2e)', () => {
   let adminToken: string;
   let userId: string;
   let userToken: string;
+  let otherId: string;
+  let otherToken: string;
   let scheduleCreatedId: string;
   let roomCreatedId: string;
 
@@ -61,6 +70,9 @@ describe('AppController (e2e)', () => {
       .post('/auth/register')
       .send(MockAdmin);
     adminId = adminRes.body._id;
+    await app
+      .get<Model<UsersModel>>(getModelToken(UsersModel.name))
+      .updateOne({ email: MockAdmin.email }, { role: UserRoleType.Admin });
     const adminLogin = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: MockAdmin.email, password: MockAdmin.password });
@@ -74,6 +86,15 @@ describe('AppController (e2e)', () => {
       .post('/auth/login')
       .send({ email: MockUser.email, password: MockUser.password });
     userToken = userLogin.body.access_token;
+
+    const otherRes = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(MockOther);
+    otherId = otherRes.body._id;
+    const otherLogin = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: MockOther.email, password: MockOther.password });
+    otherToken = otherLogin.body.access_token;
   });
 
   it('/rooms/create (POST)', async () => {
@@ -189,6 +210,7 @@ describe('AppController (e2e)', () => {
   it('/schedule/:id (PATCH) - success', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
+      .set('Authorization', 'Bearer ' + userToken)
       .send({
         date: '2025-12-03',
       })
@@ -202,6 +224,7 @@ describe('AppController (e2e)', () => {
   it('/schedule/:id (PATCH) - error - not found', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleIdFalsy)
+      .set('Authorization', 'Bearer ' + userToken)
       .send({
         date: '2025-12-03',
       })
@@ -211,6 +234,7 @@ describe('AppController (e2e)', () => {
   it('/schedule/:id (PATCH) - error - room not found', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
+      .set('Authorization', 'Bearer ' + userToken)
       .send({
         roomId: roomIdFalsy,
       })
@@ -224,6 +248,7 @@ describe('AppController (e2e)', () => {
   it('/schedule/:id (PATCH) - error - pipe validation - roomId', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
+      .set('Authorization', 'Bearer ' + userToken)
       .send({
         roomId: 123,
       })
@@ -239,6 +264,7 @@ describe('AppController (e2e)', () => {
   it('/schedule/:id (PATCH) - error - pipe validation error - not a real date', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
+      .set('Authorization', 'Bearer ' + userToken)
       .send({
         date: '2024-02-31',
       })
@@ -252,6 +278,7 @@ describe('AppController (e2e)', () => {
   it('/schedule/:id (PATCH) - error - pipe validation error - date', async () => {
     return await request(app.getHttpServer())
       .patch('/schedule/' + scheduleCreatedId)
+      .set('Authorization', 'Bearer ' + userToken)
       .send({ date: '2026, November 19' })
       .expect(400)
       .then((res) => {
@@ -299,6 +326,21 @@ describe('AppController (e2e)', () => {
       });
   });
 
+  it('/schedule/:id (PATCH) - error - booking of another user', async () => {
+    return await request(app.getHttpServer())
+      .patch('/schedule/' + scheduleCreatedId)
+      .set('Authorization', 'Bearer ' + otherToken)
+      .send({ date: '2025-12-04' })
+      .expect(404, { statusCode: 404, message: SCHEDULE_NOT_FOUND });
+  });
+
+  it('/schedule/:id (DELETE) - error - booking of another user', async () => {
+    return await request(app.getHttpServer())
+      .delete('/schedule/' + scheduleCreatedId)
+      .set('Authorization', 'Bearer ' + otherToken)
+      .expect(404, { statusCode: 404, message: SCHEDULE_NOT_FOUND });
+  });
+
   it('/schedule/:id (DELETE) - success', async () => {
     return await request(app.getHttpServer())
       .delete('/schedule/' + scheduleCreatedId)
@@ -321,6 +363,10 @@ describe('AppController (e2e)', () => {
   });
 
   afterAll(async () => {
+    await request(app.getHttpServer())
+      .delete('/users/' + otherId)
+      .set('Authorization', 'Bearer ' + otherToken)
+      .send({ email: MockOther.email, password: MockOther.password });
     await request(app.getHttpServer())
       .delete('/users/' + adminId)
       .set('Authorization', 'Bearer ' + adminToken)

@@ -12,7 +12,9 @@ import {
 } from '../src/rooms/constants/rooms.errors.constants';
 import { INVALID_ID } from '../src/pipes/id-validation.pipe';
 import { UserRegisterDto } from '../src/users/dto/users.dto';
-import { UserRoleType } from '../src/users/model/users.model';
+import { UserRoleType, UsersModel } from '../src/users/model/users.model';
+import { getModelToken } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 const MockRoom: CreateRoomDto = {
   type: HotelRoomType.Single,
@@ -26,7 +28,6 @@ const MockAdmin: UserRegisterDto = {
   firstName: 'Admin',
   lastName: 'Test',
   phone: '1234567890',
-  role: UserRoleType.Admin,
 };
 
 describe('AppController (e2e)', () => {
@@ -47,6 +48,9 @@ describe('AppController (e2e)', () => {
       .post('/auth/register')
       .send(MockAdmin);
     adminId = adminRes.body._id;
+    await app
+      .get<Model<UsersModel>>(getModelToken(UsersModel.name))
+      .updateOne({ email: MockAdmin.email }, { role: UserRoleType.Admin });
     const adminLogin = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: MockAdmin.email, password: MockAdmin.password });

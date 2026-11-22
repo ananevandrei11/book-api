@@ -17,13 +17,12 @@ export class UsersService {
     private readonly passwordHasher: PasswordHasher,
   ) {}
 
-  async createUser(dto: UserRegisterDto): Promise<UsersDocument | null> {
+  async createUser(dto: UserRegisterDto): Promise<UsersDocument> {
     const newUser = await this.userModel.create({
       email: dto.email,
       firstName: dto.firstName,
       lastName: dto.lastName,
       phone: dto.phone,
-      role: dto.role,
       passwordHash: await this.passwordHasher.hash(dto.password),
     });
     return newUser;
@@ -49,6 +48,7 @@ export class UsersService {
       throw new UnauthorizedException(USER_WRONG_PASSWORD);
     }
     return {
+      id: user._id.toString(),
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,

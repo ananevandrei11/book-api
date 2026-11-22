@@ -20,7 +20,7 @@ export class UsersModel {
   lastName: string;
   @Prop()
   phone: string;
-  @Prop({ enum: UserRoleType })
+  @Prop({ enum: UserRoleType, default: UserRoleType.User })
   role: UserRoleType;
 }
 
