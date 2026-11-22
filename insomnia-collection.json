@@ -1,0 +1,314 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_source": "insomnia.desktop.app:v8",
+  "resources": [
+    {
+      "_id": "wrk_book_api",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "book-api",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_book_api",
+      "name": "Base Environment",
+      "data": {
+        "baseUrl": "http://localhost:3000",
+        "adminToken": "",
+        "userToken": "",
+        "roomId": "",
+        "scheduleId": "",
+        "userId": ""
+      }
+    },
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_book_api",
+      "name": "auth"
+    },
+    {
+      "_id": "fld_users",
+      "_type": "request_group",
+      "parentId": "wrk_book_api",
+      "name": "users"
+    },
+    {
+      "_id": "fld_rooms",
+      "_type": "request_group",
+      "parentId": "wrk_book_api",
+      "name": "rooms"
+    },
+    {
+      "_id": "fld_schedule",
+      "_type": "request_group",
+      "parentId": "wrk_book_api",
+      "name": "schedule"
+    },
+    {
+      "_id": "req_root",
+      "_type": "request",
+      "parentId": "wrk_book_api",
+      "name": "GET /",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/",
+      "headers": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_register_admin",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "register admin",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/auth/register-admin",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Secret123!\",\n  \"firstName\": \"Admin\",\n  \"lastName\": \"User\",\n  \"phone\": \"1234567890\"\n}"
+      }
+    },
+    {
+      "_id": "req_register",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "register user",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/auth/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Secret123!\",\n  \"firstName\": \"Regular\",\n  \"lastName\": \"User\",\n  \"phone\": \"1234567890\"\n}"
+      }
+    },
+    {
+      "_id": "req_login_admin",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "login admin",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Secret123!\"\n}"
+      }
+    },
+    {
+      "_id": "req_login_user",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "login user",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/auth/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Secret123!\"\n}"
+      }
+    },
+    {
+      "_id": "req_user_delete",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "delete user",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/users/{{ _.userId }}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.userToken }}"
+      },
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Secret123!\"\n}"
+      }
+    },
+    {
+      "_id": "req_room_create",
+      "_type": "request",
+      "parentId": "fld_rooms",
+      "name": "create room (admin)",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/rooms/create",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.adminToken }}"
+      },
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"type\": \"SINGLE\",\n  \"number\": 101,\n  \"seaView\": true\n}"
+      }
+    },
+    {
+      "_id": "req_room_update",
+      "_type": "request",
+      "parentId": "fld_rooms",
+      "name": "update room (admin)",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/rooms/{{ _.roomId }}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.adminToken }}"
+      },
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"seaView\": false\n}"
+      }
+    },
+    {
+      "_id": "req_room_delete",
+      "_type": "request",
+      "parentId": "fld_rooms",
+      "name": "delete room (admin)",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/rooms/{{ _.roomId }}",
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.adminToken }}"
+      }
+    },
+    {
+      "_id": "req_room_get",
+      "_type": "request",
+      "parentId": "fld_rooms",
+      "name": "get room by id",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/rooms/{{ _.roomId }}",
+      "headers": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_room_list",
+      "_type": "request",
+      "parentId": "fld_rooms",
+      "name": "get all rooms",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/rooms",
+      "headers": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_schedule_create",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "create schedule (user)",
+      "method": "POST",
+      "url": "{{ _.baseUrl }}/schedule",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.userToken }}"
+      },
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"roomId\": \"{{ _.roomId }}\",\n  \"date\": \"2026-12-01\"\n}"
+      }
+    },
+    {
+      "_id": "req_schedule_update",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "update schedule (user)",
+      "method": "PATCH",
+      "url": "{{ _.baseUrl }}/schedule/{{ _.scheduleId }}",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.userToken }}"
+      },
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"date\": \"2026-12-02\"\n}"
+      }
+    },
+    {
+      "_id": "req_schedule_delete",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "delete schedule (user)",
+      "method": "DELETE",
+      "url": "{{ _.baseUrl }}/schedule/{{ _.scheduleId }}",
+      "headers": [],
+      "authentication": {
+        "type": "bearer",
+        "token": "{{ _.userToken }}"
+      }
+    },
+    {
+      "_id": "req_schedule_get",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "get schedule by id",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/schedule/{{ _.scheduleId }}",
+      "headers": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_schedule_list",
+      "_type": "request",
+      "parentId": "fld_schedule",
+      "name": "get all schedules",
+      "method": "GET",
+      "url": "{{ _.baseUrl }}/schedule",
+      "headers": [],
+      "authentication": {}
+    }
+  ]
+}

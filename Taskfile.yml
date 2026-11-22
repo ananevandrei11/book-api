@@ -1,0 +1,42 @@
+version: '3'
+
+tasks:
+  up:
+    desc: Start docker services
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: Stop docker services
+    cmds:
+      - docker compose down
+
+  dev:
+    desc: Start app in watch mode
+    cmds:
+      - pnpm start:dev
+
+  debug:
+    desc: Start app in debug watch mode
+    cmds:
+      - pnpm start:debug
+
+  test:
+    desc: Run unit tests
+    cmds:
+      - pnpm test
+
+  e2e:
+    desc: Run e2e tests
+    cmds:
+      - pnpm test:e2e
+
+  lint:
+    desc: Run lint
+    cmds:
+      - pnpm lint
+
+  objectid:
+    desc: Generate random MongoDB ObjectId
+    cmds:
+      - openssl rand -hex 12
