@@ -4,6 +4,10 @@ import { UsersDocument, UsersModel } from './model/users.model';
 import { Model } from 'mongoose';
 import { UserRegisterDto, UsersPayloadDto } from './dto/users.dto';
 import { PasswordHasher } from '@nestjs/authentication';
+import {
+  USER_NOT_FOUND,
+  USER_WRONG_PASSWORD,
+} from './constants/users.errors.constants';
 
 @Injectable()
 export class UsersService {
@@ -35,14 +39,14 @@ export class UsersService {
   ): Promise<UsersPayloadDto> {
     const user = await this.findUserByEmail(email);
     if (!user) {
-      throw new UnauthorizedException('User is not found');
+      throw new UnauthorizedException(USER_NOT_FOUND);
     }
     const isCorrectPassword = await this.passwordHasher.verify(
       password,
       user.passwordHash,
     );
     if (!isCorrectPassword) {
-      throw new UnauthorizedException('Email or passwotd is not correct');
+      throw new UnauthorizedException(USER_WRONG_PASSWORD);
     }
     return {
       email: user.email,
@@ -54,7 +58,7 @@ export class UsersService {
   }
 
   async deleteUser(id: string, email: string): Promise<UsersDocument | null> {
-    const deletedUser = await this.userModel.findByIdAndDelete(
+    const deletedUser = await this.userModel.findOneAndDelete(
       {
         _id: id,
         email, 

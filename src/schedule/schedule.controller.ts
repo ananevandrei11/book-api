@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -16,6 +17,10 @@ import { CreateScheduleDto, UpdateScheduleDto } from './dto/schedule.dto';
 import { SCHEDULE_NOT_FOUND } from './constants/schedule.errors.constants';
 import { IdValidationPipe } from '../pipes/id-validation.pipe';
 import { validationExceptionFactory } from '../pipes/validation-exception.factory';
+import { JwtAuthGuard } from '../auth/guards/jwt.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../decorators/roles.decorator';
+import { UserRoleType } from '../users/model/users.model';
 
 @Controller('schedule')
 export class ScheduleController {
@@ -27,6 +32,8 @@ export class ScheduleController {
       exceptionFactory: validationExceptionFactory,
     }),
   )
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles([UserRoleType.User])
   @Post()
   create(@Body() dto: CreateScheduleDto) {
     return this.scheduleService.create(dto);
@@ -50,6 +57,8 @@ export class ScheduleController {
     return updatedSchedule;
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles([UserRoleType.User])
   @Delete(':id')
   async delete(@Param('id', IdValidationPipe) id: string) {
     const deletedSchedule = await this.scheduleService.delete(id);

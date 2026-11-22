@@ -1,11 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { UsersDocument, UsersModel } from '../users/model/users.model';
-import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
-import { UserRegisterDto, UsersPayloadDto } from '../users/dto/users.dto';
+import { UserRegisterDto } from '../users/dto/users.dto';
 import { UsersService } from '../users/users.service';
 import { AuthLoginDto } from './dto/auth.dto';
+import { USER_ALREADY_REGISTERED } from './constants/auth.errors.constants';
 
 @Injectable()
 export class AuthService {
@@ -17,7 +15,7 @@ export class AuthService {
   async register(dto: UserRegisterDto) {
     const oldUser = await this.userService.findUserByEmail(dto.email);
     if (oldUser) {
-      throw new BadRequestException('User is already registered');
+      throw new BadRequestException(USER_ALREADY_REGISTERED);
     }
     return this.userService.createUser(dto);
   }
