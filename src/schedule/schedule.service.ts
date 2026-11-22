@@ -21,10 +21,13 @@ export class ScheduleService {
     private readonly roomsService: RoomsService,
   ) {}
 
-  async create(dto: CreateScheduleDto): Promise<ScheduleDocument> {
+  async create(
+    dto: CreateScheduleDto,
+    userId: string,
+  ): Promise<ScheduleDocument> {
     await this.checkRoomExists(dto.roomId);
     try {
-      return await this.scheduleModel.create(dto);
+      return await this.scheduleModel.create({ ...dto, userId });
     } catch (e) {
       this.handleWriteError(e);
       throw e;
@@ -34,13 +37,14 @@ export class ScheduleService {
   async update(
     id: string,
     dto: UpdateScheduleDto,
+    userId: string,
   ): Promise<ScheduleDocument | null> {
     if (dto.roomId !== undefined) {
       await this.checkRoomExists(dto.roomId);
     }
     try {
       return await this.scheduleModel
-        .findByIdAndUpdate(id, dto, {
+        .findOneAndUpdate({ _id: id, userId }, dto, {
           returnDocument: 'after',
           runValidators: true,
         })
@@ -51,8 +55,8 @@ export class ScheduleService {
     }
   }
 
-  delete(id: string): Promise<ScheduleDocument | null> {
-    return this.scheduleModel.findByIdAndDelete(id).exec();
+  delete(id: string, userId: string): Promise<ScheduleDocument | null> {
+    return this.scheduleModel.findOneAndDelete({ _id: id, userId }).exec();
   }
 
   findById(id: string): Promise<ScheduleDocument | null> {
