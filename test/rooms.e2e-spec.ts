@@ -11,6 +11,8 @@ import {
   ROOM_NOT_FOUND,
 } from '../src/rooms/constants/rooms.errors.constants';
 import { INVALID_ID } from '../src/pipes/id-validation.pipe';
+import { UserRegisterDto } from '../src/users/dto/users.dto';
+import { UserRoleType } from '../src/users/model/users.model';
 
 const MockRoom: CreateRoomDto = {
   type: HotelRoomType.Single,
@@ -18,9 +20,19 @@ const MockRoom: CreateRoomDto = {
   seaView: true,
 };
 const roomIdFalsy = new Types.ObjectId().toHexString();
+const MockAdmin: UserRegisterDto = {
+  email: `admin-${Date.now()}@test.com`,
+  password: 'password',
+  firstName: 'Admin',
+  lastName: 'Test',
+  phone: '1234567890',
+  role: UserRoleType.Admin,
+};
 
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
+  let adminId: string;
+  let adminToken: string;
   let roomCreatedId: string;
 
   beforeAll(async () => {
@@ -30,6 +42,15 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    const adminRes = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send(MockAdmin);
+    adminId = adminRes.body._id;
+    const adminLogin = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: MockAdmin.email, password: MockAdmin.password });
+    adminToken = adminLogin.body.access_token;
   });
 
   it('/ (GET)', () => {
@@ -42,6 +63,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/create (POST) - success', async () => {
     return await request(app.getHttpServer())
       .post('/rooms/create')
+      .set('Authorization', 'Bearer ' + adminToken)
       .send(MockRoom)
       .expect(201)
       .then((res) => {
@@ -52,6 +74,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/create (POST) - error validation type', async () => {
     return await request(app.getHttpServer())
       .post('/rooms/create')
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({ ...MockRoom, type: 'VIP' })
       .expect(400)
       .then((res) => {
@@ -66,6 +89,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/create (POST) - error validation sea view', async () => {
     return await request(app.getHttpServer())
       .post('/rooms/create')
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({ ...MockRoom, seaView: 'YES' })
       .expect(400)
       .then((res) => {
@@ -80,6 +104,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/create (POST) - error validation numer of room', async () => {
     return await request(app.getHttpServer())
       .post('/rooms/create')
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({ ...MockRoom, number: 0 })
       .expect(400)
       .then((res) => {
@@ -94,6 +119,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/create (POST) - error validation number is not integer', async () => {
     return await request(app.getHttpServer())
       .post('/rooms/create')
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({ ...MockRoom, number: 1.5 })
       .expect(400, {
         statusCode: 400,
@@ -105,6 +131,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/create (POST) - error validation empty body', async () => {
     return await request(app.getHttpServer())
       .post('/rooms/create')
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({})
       .expect(400)
       .then((res) => {
@@ -160,6 +187,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (PATCH) - success', async () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomCreatedId)
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({
         seaView: false,
       })
@@ -173,6 +201,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (PATCH) - error - id is not found', async () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomIdFalsy)
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({
         seaView: false,
       })
@@ -182,6 +211,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (PATCH) - error validation type', async () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomIdFalsy)
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({
         type: 'VIP',
       })
@@ -195,6 +225,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (PATCH) - error validation number of room', async () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomIdFalsy)
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({
         number: 0,
       })
@@ -208,6 +239,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (PATCH) - error validation sea view', async () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomIdFalsy)
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({
         seaView: 0,
       })
@@ -221,6 +253,7 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (PATCH) - error validation type is null', async () => {
     return await request(app.getHttpServer())
       .patch('/rooms/' + roomCreatedId)
+      .set('Authorization', 'Bearer ' + adminToken)
       .send({
         type: null,
       })
@@ -234,16 +267,22 @@ describe('AppController (e2e)', () => {
   it('/rooms/:id (DELETE) - success', async () => {
     return await request(app.getHttpServer())
       .delete('/rooms/' + roomCreatedId)
+      .set('Authorization', 'Bearer ' + adminToken)
       .expect(200);
   });
 
   it('/rooms/:id (DELETE) - error', async () => {
     return await request(app.getHttpServer())
       .delete('/rooms/' + roomIdFalsy)
+      .set('Authorization', 'Bearer ' + adminToken)
       .expect(404, { statusCode: 404, message: ROOM_NOT_FOUND });
   });
 
   afterAll(async () => {
+    await request(app.getHttpServer())
+      .delete('/users/' + adminId)
+      .set('Authorization', 'Bearer ' + adminToken)
+      .send({ email: MockAdmin.email, password: MockAdmin.password });
     await app.close();
     await disconnect();
   });
