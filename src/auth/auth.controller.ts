@@ -9,6 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { UserRegisterDto } from '../users/dto/users.dto';
 import { AuthLoginDto } from './dto/auth.dto';
+import { UserRoleType } from '../users/model/users.model';
 
 @Controller('auth')
 export class AuthController {
@@ -19,6 +20,13 @@ export class AuthController {
   @UsePipes(new ValidationPipe())
   async register(@Body() dto: UserRegisterDto) {
     return await this.authService.register(dto);
+  }
+
+  @Post('/register-admin')
+  @HttpCode(200)
+  @UsePipes(new ValidationPipe())
+  async registerAdmin(@Body() dto: UserRegisterDto) {
+    return await this.authService.register(dto, UserRoleType.Admin);
   }
 
   @HttpCode(200)

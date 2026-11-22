@@ -14,9 +14,6 @@ import {
 import { ROOM_NOT_FOUND } from '../src/rooms/constants/rooms.errors.constants';
 import { INVALID_ID } from '../src/pipes/id-validation.pipe';
 import { UserRegisterDto } from '../src/users/dto/users.dto';
-import { UserRoleType, UsersModel } from '../src/users/model/users.model';
-import { getModelToken } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 
 const scheduleIdFalsy = new Types.ObjectId().toHexString();
 const roomIdFalsy = new Types.ObjectId().toHexString();
@@ -67,12 +64,9 @@ describe('AppController (e2e)', () => {
     await app.init();
 
     const adminRes = await request(app.getHttpServer())
-      .post('/auth/register')
+      .post('/auth/register-admin')
       .send(MockAdmin);
     adminId = adminRes.body._id;
-    await app
-      .get<Model<UsersModel>>(getModelToken(UsersModel.name))
-      .updateOne({ email: MockAdmin.email }, { role: UserRoleType.Admin });
     const adminLogin = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: MockAdmin.email, password: MockAdmin.password });

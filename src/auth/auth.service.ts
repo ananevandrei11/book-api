@@ -4,6 +4,7 @@ import { UserRegisterDto } from '../users/dto/users.dto';
 import { UsersService } from '../users/users.service';
 import { AuthLoginDto } from './dto/auth.dto';
 import { USER_ALREADY_REGISTERED } from './constants/auth.errors.constants';
+import { UserRoleType } from '../users/model/users.model';
 
 @Injectable()
 export class AuthService {
@@ -12,12 +13,12 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: UserRegisterDto) {
+  async register(dto: UserRegisterDto, role?: UserRoleType) {
     const oldUser = await this.userService.findUserByEmail(dto.email);
     if (oldUser) {
       throw new BadRequestException(USER_ALREADY_REGISTERED);
     }
-    const newUser = await this.userService.createUser(dto);
+    const newUser = await this.userService.createUser(dto, role);
     return {
       _id: newUser._id,
       email: newUser.email,
