@@ -44,6 +44,7 @@ export class ScheduleController {
   @UsePipes(
     new ValidationPipe({
       transform: true,
+      whitelist: true,
       exceptionFactory: validationExceptionFactory,
     }),
   )

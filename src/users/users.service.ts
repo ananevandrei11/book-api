@@ -74,7 +74,7 @@ export class UsersService {
       {
         returnDocument: 'after',
       },
-    ).exec();
+    ).select('-passwordHash').exec();
     return deletedUser;
   }
 }

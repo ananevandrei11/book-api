@@ -11,6 +11,7 @@ import {
 import { UsersDeleteDto } from './dto/users.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt.guard';
 import { UsersService } from './users.service';
+import { IdValidationPipe } from '../pipes/id-validation.pipe';
 
 @Controller('users')
 export class UsersController {
@@ -20,7 +21,10 @@ export class UsersController {
   @HttpCode(200)
   @Delete(':id')
   @UsePipes(new ValidationPipe())
-  async delete(@Param('id') id: string, @Body() dto: UsersDeleteDto) {
+  async delete(
+    @Param('id', IdValidationPipe) id: string,
+    @Body() dto: UsersDeleteDto,
+  ) {
     const user = await this.usersService.validateUser(dto.email, dto.password);
     return await this.usersService.deleteUser(id, user.email);
   }
